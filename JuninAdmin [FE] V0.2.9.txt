@@ -1,0 +1,413 @@
+local Creator = "VALENTINA964303_ALT"
+-- info
+local SVersion = "[FE] V0.2.9"
+print("Made By:", Creator)
+print("Version:", SVersion)
+-- Variants --
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local userInputService = game:GetService("UserInputService")
+local root = character:WaitForChild("HumanoidRootPart")
+
+local flying = false
+local noclip = false
+local flightSpeed = 50
+local bodyVelocity
+local bodyGyro
+
+-- Variáveis do SpinFling
+local spinning = false
+local spinForce = nil
+-- Criar UI no PlayerGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Name = "JuninFEAdmin"
+
+-- Criar botão de título com fundo transparente
+local titleButton = Instance.new("TextButton")
+titleButton.Parent = screenGui
+titleButton.Size = UDim2.new(0, 200, 0, 50)
+titleButton.Position = UDim2.new(0.95, -160, 0.48, -200)  -- Posição original
+titleButton.BackgroundColor3 = Color3.fromRGB(247, 99, 0) -- Laranja
+titleButton.BackgroundTransparency = 0.66
+titleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleButton.Font = Enum.Font.SourceSansBold
+titleButton.TextSize = 18
+titleButton.Name = "Tittle"
+titleButton.Text = "Junin Admin [FE] V0.2.9"
+titleButton.AutoButtonColor = false
+
+-- Enable Plataform Stand --
+local EnablePlat = Instance.new("TextButton")
+EnablePlat.Parent = screenGui
+EnablePlat.Size = UDim2.new(0, 100,0, 50)
+EnablePlat.Position = UDim2.new(0.95, -62,0.48, 135)  -- Posição original
+EnablePlat.BackgroundColor3 = Color3.fromRGB(247, 99, 0) -- Laranja
+EnablePlat.BackgroundTransparency = 0
+EnablePlat.TextColor3 = Color3.fromRGB(255, 255, 255)
+EnablePlat.Font = Enum.Font.SourceSansBold
+EnablePlat.TextSize = 18
+EnablePlat.Name = "PlatStand"
+EnablePlat.Text = "Enable plataform stand"
+EnablePlat.AutoButtonColor = true
+EnablePlat.TextScaled = true
+
+-- Fling --
+local FlingButtom = Instance.new("TextButton")
+FlingButtom.Parent = screenGui
+FlingButtom.Size = UDim2.new(0, 200, 0, 50)
+FlingButtom.Position = UDim2.new(0.95, -160,0.48, -252)  -- Posição original
+FlingButtom.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Laranja
+FlingButtom.BackgroundTransparency = 0.1
+FlingButtom.TextColor3 = Color3.fromRGB(0, 0, 0)
+FlingButtom.Font = Enum.Font.SourceSansBold
+FlingButtom.TextSize = 18
+FlingButtom.Name = "SpinFling"
+FlingButtom.Text = "SpinFling [Off]"
+FlingButtom.AutoButtonColor = true
+
+-- Criar caixa de texto para nome do player
+local playerNameTextBox = Instance.new("TextBox")
+playerNameTextBox.Parent = screenGui
+playerNameTextBox.Size = UDim2.new(0, 200, 0, 40)
+playerNameTextBox.Position = UDim2.new(0.95, -160, 0.48, -145)  -- Posição ao lado do título
+playerNameTextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Branco
+playerNameTextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+playerNameTextBox.Font = Enum.Font.SourceSansBold
+playerNameTextBox.TextSize = 18
+playerNameTextBox.PlaceholderText = "Target"
+playerNameTextBox.ClearTextOnFocus = false
+playerNameTextBox.Text = ""
+playerNameTextBox.Name = "TargetPlayer"
+
+-- Criar botão de Teleporte ao lado da TextBox do nome
+local Goto = Instance.new("TextButton")
+Goto.Parent = screenGui
+Goto.Size = UDim2.new(0, 100, 0, 40)
+Goto.Position = UDim2.new(0.95, -263, 0.48, -145)  -- Posição ao lado da caixa de texto
+Goto.BackgroundColor3 = Color3.fromRGB(167, 60, 24) -- Laranja
+Goto.TextColor3 = Color3.fromRGB(255, 255, 255)
+Goto.Font = Enum.Font.SourceSansBold
+Goto.TextSize = 18
+Goto.Name = "Goto"
+Goto.Text = "Goto [Player]"
+
+-- Criar botão de Teleporte em baixo do jumpower
+local tpButton = Instance.new("TextButton")
+tpButton.Parent = screenGui
+tpButton.Size = UDim2.new(0, 150, 0, 40)
+tpButton.Position = UDim2.new(0.95, -312,0.5, 140)  -- Posição à esquerda da caixa de texto
+tpButton.BackgroundColor3 = Color3.fromRGB(133, 0, 199) -- Laranja
+tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpButton.Font = Enum.Font.SourceSansBold
+tpButton.TextSize = 18
+tpButton.Text = "Antifling[Manual]"
+tpButton.TextScaled = true
+tpButton.Name = "TpAntiFling"
+
+-- Criar botão de voo
+local flyButton = Instance.new("TextButton")
+flyButton.Parent = screenGui
+flyButton.Size = UDim2.new(0, 100, 0, 50)
+flyButton.Position = UDim2.new(0.95, -62,0.5, -110)  -- Posição original
+flyButton.BackgroundColor3 = Color3.fromRGB(255, 102, 0) -- Laranja
+flyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+flyButton.Font = Enum.Font.SourceSansBold
+flyButton.TextSize = 18
+flyButton.Name = "Fly"
+flyButton.Text = "Fly"
+
+-- Criar botão de noclip
+local noclipButton = Instance.new("TextButton")
+noclipButton.Parent = screenGui
+noclipButton.Size = UDim2.new(0, 100, 0, 50)
+noclipButton.Position = UDim2.new(0.95, -62,0.5, -13)  -- Posição original
+noclipButton.BackgroundColor3 = Color3.fromRGB(255, 102, 0) -- Laranja
+noclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipButton.Font = Enum.Font.SourceSansBold
+noclipButton.TextSize = 18
+noclipButton.Text = "Enable Noclip"
+noclipButton.Name = "Noclip"
+
+-- Criar botão de sentar
+local sitButton = Instance.new("TextButton")
+sitButton.Parent = screenGui
+sitButton.Size = UDim2.new(0, 100,0, 40)
+sitButton.Position = UDim2.new(0.95, -62,0.51, -60)  -- Posição original
+sitButton.BackgroundColor3 = Color3.fromRGB(255, 102, 0) -- Laranja
+sitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+sitButton.Font = Enum.Font.SourceSansBold
+sitButton.TextSize = 18
+sitButton.Text = "Sit"
+sitButton.Name = "Sit"
+
+-- Criar TextBox para WalkSpeed
+local walkSpeedTextBox = Instance.new("TextBox")
+walkSpeedTextBox.Parent = screenGui
+walkSpeedTextBox.Size = UDim2.new(0, 120, 0, 40)
+walkSpeedTextBox.Position = UDim2.new(0.95, -81,0.5, 40)  -- Posição original
+walkSpeedTextBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho
+walkSpeedTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedTextBox.Font = Enum.Font.SourceSansBold
+walkSpeedTextBox.TextSize = 18
+walkSpeedTextBox.PlaceholderText = "WalkSpeed"
+walkSpeedTextBox.ClearTextOnFocus = true
+walkSpeedTextBox.Text = ""
+walkSpeedTextBox.Name = "WalkSpeed"
+
+-- Criar TextBox para JumpPower
+local jumpPowerTextBox = Instance.new("TextBox")
+jumpPowerTextBox.Parent = screenGui
+jumpPowerTextBox.Size = UDim2.new(0, 120, 0, 40)
+jumpPowerTextBox.Position = UDim2.new(0.95, -81,0.5, 83)  -- Posição original
+jumpPowerTextBox.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Azul
+jumpPowerTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpPowerTextBox.Font = Enum.Font.SourceSansBold
+jumpPowerTextBox.TextSize = 18
+jumpPowerTextBox.Name = "JumpPower"
+jumpPowerTextBox.PlaceholderText = "JumpPower"
+jumpPowerTextBox.ClearTextOnFocus = true
+jumpPowerTextBox.Text = ""
+
+wait(0.1)
+
+-- FuncPlatStand --
+local function FuncPlatStand()
+	if humanoid.PlatformStand == false then
+		humanoid.PlatformStand = true
+	end
+end
+EnablePlat.MouseButton1Click:Connect(function()
+	FuncPlatStand()
+end)
+-- função spin
+local function toggleSpin()
+	if spinning then
+		-- Desativar SpinFling
+		if spinForce then
+			spinForce:Destroy()
+			spinForce = nil
+		end
+		FlingButtom.Text = "SpinFling [Off]"
+		FlingButtom.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho
+	else
+		-- Ativar SpinFling
+		spinForce = Instance.new("BodyAngularVelocity")
+		spinForce.AngularVelocity = Vector3.new(0, 100, 0) -- Velocidade de giro
+		spinForce.MaxTorque = Vector3.new(0, math.huge, 0)
+		spinForce.P = 3000
+		spinForce.Parent = root
+
+		FlingButtom.Text = "SpinFling [On]"
+		FlingButtom.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Verde
+	end
+	spinning = not spinning
+end
+
+
+-- Função para ativar o voo
+local function startFlying()
+	if not flying then
+		flying = true
+		flyButton.Text = "UnFly"
+		local rootPart = character:WaitForChild("HumanoidRootPart")
+
+		-- Criar BodyVelocity para movimento
+		bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.Parent = rootPart
+		bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+
+		-- Criar BodyGyro para travar a rotação do personagem
+		bodyGyro = Instance.new("BodyGyro")
+		bodyGyro.Parent = rootPart
+		bodyGyro.MaxTorque = Vector3.new(900000, 900000, 900000)
+		bodyGyro.D = 50
+		bodyGyro.P = 15000
+
+		humanoid.PlatformStand = true
+	end
+end
+
+-- Função de teleporte para a posição (-50, 15, -40)
+local function teleportToPosition()
+	local targetPosition = Vector3.new(-50, 15, -40)  -- Nova posição para o teleporte
+	character:SetPrimaryPartCFrame(CFrame.new(targetPosition))  -- Teleporta para a posição
+end
+
+-- Conectar o botão de Teleporte
+tpButton.MouseButton1Click:Connect(function()
+	teleportToPosition()  -- Teleporta para a posição (-50, 15, -40)
+end)
+if Creator == "VALENTINA964303_ALT" then
+	print("Thank's For using my script!")
+else
+	player:Kick("REASON: Your not using the oficcial version")
+	print("FAKE Version DETECTED")	
+end
+-- Função para desativar o voo
+local function stopFlying()
+	if flying then
+		flying = false
+		flyButton.Text = "Fly"
+		if bodyVelocity then
+			bodyVelocity:Destroy()
+		end
+		if bodyGyro then
+			bodyGyro:Destroy()
+		end
+		humanoid.PlatformStand = false
+	end
+end
+
+-- Função para ativar/desativar Noclip
+local function toggleNoclip()
+	noclip = not noclip
+	if noclip then
+		noclipButton.Text = "Disable Noclip"
+		for _, part in ipairs(character:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+	else
+		noclipButton.Text = "Enable Noclip"
+		for _, part in ipairs(character:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+			end
+		end
+	end
+end
+
+-- Função para mover o personagem com W, A, S, D
+local function moveFly()
+	if flying then
+		local moveDirection = Vector3.new(0, 0, 0)
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+		if rootPart then
+			local camera = game.Workspace.CurrentCamera
+			local cameraCFrame = camera.CFrame
+
+			if userInputService:IsKeyDown(Enum.KeyCode.W) then
+				moveDirection = moveDirection + cameraCFrame.LookVector
+			end
+			if userInputService:IsKeyDown(Enum.KeyCode.S) then
+				moveDirection = moveDirection - cameraCFrame.LookVector
+			end
+			if userInputService:IsKeyDown(Enum.KeyCode.A) then
+				moveDirection = moveDirection - cameraCFrame.RightVector
+			end
+			if userInputService:IsKeyDown(Enum.KeyCode.D) then
+				moveDirection = moveDirection + cameraCFrame.RightVector
+			end
+
+			if moveDirection.Magnitude > 0 then
+				moveDirection = moveDirection.Unit * flightSpeed
+			end
+
+			bodyVelocity.Velocity = moveDirection
+		end
+	end
+end
+
+-- Função para atualizar a orientação para seguir a câmera corretamente
+local function updateOrientation()
+	if flying and bodyGyro then
+		local camera = game.Workspace.CurrentCamera
+		bodyGyro.CFrame = CFrame.new(character.PrimaryPart.Position, character.PrimaryPart.Position + camera.CFrame.LookVector)
+	end
+end
+
+-- Função para alterar a WalkSpeed baseado no valor da TextBox
+local function setWalkSpeed()
+	local walkSpeedValue = tonumber(walkSpeedTextBox.Text)
+	if walkSpeedValue then
+		humanoid.WalkSpeed = walkSpeedValue
+	else
+		print("Please enter a valid number for WalkSpeed.")
+	end
+end
+
+-- Função para alterar o JumpPower baseado no valor da TextBox
+local function setJumpPower()
+	local jumpPowerValue = tonumber(jumpPowerTextBox.Text)
+	if jumpPowerValue then
+		humanoid.UseJumpPower = true
+		task.wait(0.1)
+		humanoid.JumpPower = jumpPowerValue
+	else
+		if humanoid.UseJumpPower == true then
+			humanoid.UseJumpPower = true
+		end
+		print("Please enter a valid number for JumpPower.")
+	end
+end
+
+
+
+
+-- Detectar a entrada de comandos
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+	if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
+		if flying then
+			stopFlying()
+		else
+			startFlying()
+		end
+	end
+end)
+
+-- Botões de UI para ativar/desativar o voo, Noclip, e sentar
+flyButton.MouseButton1Click:Connect(function()
+	if flying then
+		stopFlying()
+	else
+		startFlying()
+	end
+end)
+
+noclipButton.MouseButton1Click:Connect(toggleNoclip)
+
+sitButton.MouseButton1Click:Connect(function()
+	humanoid.Sit = true
+end)
+
+walkSpeedTextBox.FocusLost:Connect(function()
+	setWalkSpeed()
+end)
+
+jumpPowerTextBox.FocusLost:Connect(function()
+	setJumpPower()
+end)
+
+-- Atualizar o movimento enquanto estiver voando
+game:GetService("RunService").Heartbeat:Connect(function()
+	moveFly()
+	updateOrientation()
+end)
+
+-- Função de teleporte para a posição (-50, 15, -40)
+local function TpPlr()
+	local TargetPlr = playerNameTextBox.Text
+	local AntiError1 = game.Workspace:FindFirstChild(TargetPlr)
+	local Fun = game.Workspace:FindFirstChild(TargetPlr).HumanoidRootPart.CFrame.Position
+	local AE2 = AntiError1:FindFirstChild("HumanoidRootPart")
+	if AntiError1 then
+		if AE2 then
+			character:SetPrimaryPartCFrame(CFrame.new(Fun))
+			print("You teleported to", TargetPlr)
+		end
+	end
+end
+
+-- Conectar o botão de Teleporte
+Goto.MouseButton1Click:Connect(function()
+	TpPlr()  -- Teleporta para a posição (-50, 15, -40)
+end)
+FlingButtom.MouseButton1Click:Connect(function()
+	toggleSpin()
+end)
+
+print(script.Name, "Online")
